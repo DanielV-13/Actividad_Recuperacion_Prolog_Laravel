@@ -33,21 +33,25 @@ la base de conocimiento y narra el resultado.
 
 Requisitos previos: **PHP 8.2+**, **Composer** y **SWI-Prolog** instalados.
 
+El esqueleto de Laravel ya viene incluido en el repositorio. El archivo `.env`
+también está listo (con `APP_KEY` generada y sesión/caché en archivos, sin base de
+datos). Solo falta descargar las dependencias de PHP:
+
 ```bash
-# 1. Instalar dependencias
+# 1. Instalar dependencias de PHP (crea la carpeta vendor/)
 composer install
 
-# 2. Preparar entorno
-copy .env.example .env        # en Linux/Mac: cp .env.example .env
-php artisan key:generate
-
-# 3. (Solo si "swipl" no esta en el PATH) indicar la ruta en .env
+# 2. (Solo si "swipl" NO esta en el PATH) indica la ruta en .env
 # SWIPL_PATH="C:/Program Files/swipl/bin/swipl.exe"
 
-# 4. Levantar el servidor
+# 3. Levantar el servidor
 php artisan serve
 # Abrir http://127.0.0.1:8000
 ```
+
+> Si clonas el repo en otra maquina y `.env` no existiera, crea uno con
+> `copy .env.example .env` (Linux/Mac: `cp .env.example .env`) y luego
+> `php artisan key:generate`.
 
 ### Comandos del chatbot
 

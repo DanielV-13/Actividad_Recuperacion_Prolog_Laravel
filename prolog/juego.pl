@@ -10,6 +10,10 @@
 
 :- set_prolog_flag(encoding, utf8).
 
+% Cargamos explicitamente la libreria de listas (member/2, append/3).
+% Asi la base funciona aunque el autoload este desactivado.
+:- use_module(library(lists)).
+
 % ------------------------------------------------------------
 %  HECHOS: PERSONAJES   ->  personaje(Nombre, Nivel, Vida)
 % ------------------------------------------------------------
