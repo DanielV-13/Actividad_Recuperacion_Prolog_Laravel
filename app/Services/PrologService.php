@@ -28,12 +28,13 @@ class PrologService
         $kb = str_replace('\\', '/', base_path('prolog/juego.pl'));
 
         // Script temporal: carga la KB y ejecuta el objetivo de forma segura.
+        // Usamos initialization/2 en modo "main": SWI ejecuta main como punto de
+        // entrada y termina solo (sin necesidad de halt manual). Esto evita los
+        // warnings "Initialization goal called halt" y "use initialization/2".
         $script = ":- set_prolog_flag(encoding, utf8).\n"
-                . ":- initialization(main).\n"
+                . ":- initialization(main, main).\n"
                 . "main :- consult('{$kb}'),\n"
-                . "        ( ({$goal}) -> true ; writeln('Sin resultados') ),\n"
-                . "        halt.\n"
-                . "main :- halt.\n";
+                . "        ( ({$goal}) -> true ; writeln('Sin resultados') ).\n";
 
         // Guardamos el script en storage/app (siempre escribible por Laravel).
         $tmp = storage_path('app/consulta_' . uniqid() . '.pl');
