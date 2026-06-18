@@ -131,6 +131,39 @@ es_alto_nivel(Personaje) :-
     Nivel > 5.
 
 
+% ------------------------------------------------------------
+%  RESOLUCION DE NOMBRES (tolerante a mayusculas/minusculas)
+%  Los atomos en Prolog distinguen mayus/minus ('kratos' \= 'Kratos').
+%  Estas reglas toman lo que escribe el usuario y lo emparejan con el
+%  nombre real registrado en los hechos, comparando todo en minusculas.
+% ------------------------------------------------------------
+
+% Empareja una entrada con el nombre real de un personaje.
+resolver_personaje(Entrada, Real) :-
+    downcase_atom(Entrada, EntradaMin),
+    personaje(Real, _, _),
+    downcase_atom(Real, RealMin),
+    RealMin == EntradaMin.
+
+% Empareja una entrada con el nombre real de un enemigo.
+resolver_enemigo(Entrada, Real) :-
+    downcase_atom(Entrada, EntradaMin),
+    enemigo(Real, _, _),
+    downcase_atom(Real, RealMin),
+    RealMin == EntradaMin.
+
+% Resuelve una lista completa de nombres de personajes.
+resolver_grupo([], []).
+resolver_grupo([Entrada|Resto], [Real|RestoReal]) :-
+    resolver_personaje(Entrada, Real),
+    resolver_grupo(Resto, RestoReal).
+
+% Ficha de un personaje: devuelve su nombre real, nivel y vida.
+ficha_personaje(Entrada, Real, Nivel, Vida) :-
+    resolver_personaje(Entrada, Real),
+    personaje(Real, Nivel, Vida).
+
+
 % ============================================================
 %  CONSTRUCTOR DE ORACIONES (conjugacion verbal)
 %  Se reutiliza para narrar el resultado de los ataques.

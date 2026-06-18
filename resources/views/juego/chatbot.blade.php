@@ -225,6 +225,7 @@
             @php
                 $ejemplos = [
                     'personajes', 'enemigos', 'misiones', 'armas',
+                    'nivel Kratos',
                     'inventario Kratos',
                     'acepta Elara en m2',
                     'ataque Kratos, Nathan Drake vs Valkyria',

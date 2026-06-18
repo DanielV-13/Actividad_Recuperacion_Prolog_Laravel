@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
  *   enemigos
  *   misiones
  *   armas
+ *   nivel <Nombre>
  *   inventario <Nombre>
  *   acepta <Nombre> en <idMision>
  *   ataque <Nombre1, Nombre2, ...> vs <Enemigo>
@@ -88,6 +89,22 @@ class JuegoController extends Controller
             return $this->ayuda();
         }
 
+        // --- nivel <Nombre> : ficha (nivel y vida) de un personaje ---
+        if (str_starts_with($texto, 'nivel')) {
+            $nombre = trim(mb_substr($mensaje, mb_strlen('nivel')));
+            if ($nombre === '') {
+                return 'Uso: nivel <Nombre>. Ej: nivel Kratos';
+            }
+            $n = $this->atomo($nombre);
+            // ficha_personaje resuelve el nombre sin importar mayus/minus y
+            // devuelve el nombre real (P), su nivel (Niv) y su vida (Vida).
+            return $this->prolog->consultar(
+                "(ficha_personaje({$n}, P, Niv, Vida) -> "
+                . "format('~w es nivel ~w (vida ~w).~n',[P,Niv,Vida]) "
+                . "; writeln('Ese personaje no existe.'))"
+            );
+        }
+
         // --- inventario <Nombre> ---
         if (str_starts_with($texto, 'inventario')) {
             $nombre = trim(mb_substr($mensaje, mb_strlen('inventario')));
@@ -95,9 +112,11 @@ class JuegoController extends Controller
                 return 'Uso: inventario <Nombre>. Ej: inventario Kratos';
             }
             $n = $this->atomo($nombre);
+            // Resolvemos primero el nombre (tolerante a mayus/minus) y mostramos
+            // el inventario usando el nombre real (P).
             return $this->prolog->consultar(
-                "(inventario({$n}, L) -> "
-                . "(atomic_list_concat(L, ', ', S), format('Inventario de {$nombre}: ~w~n',[S])) "
+                "(resolver_personaje({$n}, P) -> "
+                . "(inventario(P, L), atomic_list_concat(L, ', ', S), format('Inventario de ~w: ~w~n',[P,S])) "
                 . "; writeln('Ese personaje no existe.'))"
             );
         }
@@ -111,10 +130,13 @@ class JuegoController extends Controller
             }
             $n   = $this->atomo($nombre);
             $mid = $this->idMision($mision);
+            // Resolvemos el nombre y luego evaluamos si puede aceptar la mision.
             return $this->prolog->consultar(
-                "(puede_aceptar({$n}, {$mid}) -> "
-                . "format('Si: {$nombre} puede aceptar la mision {$mision}.~n',[]) "
-                . "; format('No: {$nombre} no tiene nivel para la mision {$mision}.~n',[]))"
+                "(resolver_personaje({$n}, P) -> "
+                . "( puede_aceptar(P, {$mid}) -> "
+                . "format('Si: ~w puede aceptar la mision {$mision}.~n',[P]) "
+                . "; format('No: ~w no tiene nivel para la mision {$mision}.~n',[P]) ) "
+                . "; writeln('Ese personaje no existe.'))"
             );
         }
 
@@ -128,9 +150,13 @@ class JuegoController extends Controller
             }
             $grupo = $this->listaAtomos($grupoTxt);
             $en    = $this->atomo($enemigo);
+            // Resolvemos los nombres del grupo y del enemigo (mayus/minus) y luego
+            // ejecutamos el ataque con los nombres reales (G y E).
             return $this->prolog->consultar(
-                "(ejecutar_ataque({$grupo}, {$en}, M) -> writeln(M) "
-                . "; writeln('No se pudo resolver el ataque. Revisa nombres y enemigo.'))"
+                "((resolver_grupo({$grupo}, G), resolver_enemigo({$en}, E)) -> "
+                . "( ejecutar_ataque(G, E, M) -> writeln(M) "
+                . "; writeln('No se pudo resolver el ataque.') ) "
+                . "; writeln('Revisa los nombres del grupo y del enemigo.'))"
             );
         }
 
@@ -144,9 +170,12 @@ class JuegoController extends Controller
             }
             $grupo = $this->listaAtomos($grupoTxt);
             $mid   = $this->idMision($mision);
+            // Resolvemos los nombres del grupo y generamos el reporte de mision.
             return $this->prolog->consultar(
-                "(generar_reporte_grupo({$grupo}, {$mid}, M) -> writeln(M) "
-                . "; writeln('No se pudo generar el reporte.'))"
+                "(resolver_grupo({$grupo}, G) -> "
+                . "( generar_reporte_grupo(G, {$mid}, M) -> writeln(M) "
+                . "; writeln('No se pudo generar el reporte.') ) "
+                . "; writeln('Revisa los nombres del grupo.'))"
             );
         }
 
@@ -212,6 +241,7 @@ class JuegoController extends Controller
              . "- enemigos\n"
              . "- misiones\n"
              . "- armas\n"
+             . "- nivel <Nombre>                 (ej: nivel Kratos)\n"
              . "- inventario <Nombre>            (ej: inventario Kratos)\n"
              . "- acepta <Nombre> en <idMision>  (ej: acepta Elara en m2)\n"
              . "- ataque <Grupo> vs <Enemigo>    (ej: ataque Kratos, Rin vs Valkyria)\n"
